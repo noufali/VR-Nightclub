@@ -10,6 +10,7 @@
 let container, renderer, camera, scene;
 let controls, loader, effect;
 let pointLight, pointLight2;
+let circles = [];
 
 window.addEventListener('load', onLoad);
 
@@ -25,13 +26,13 @@ function onLoad(){
 	container.appendChild(renderer.domElement);
 	scene = new THREE.Scene();
 	scene.background = new THREE.Color( 0x222222 );
-	camera = new THREE.PerspectiveCamera(100, wid/hei, 0.1, 1000);
+	camera = new THREE.PerspectiveCamera(100, wid/hei, 0.1, 10000);
 
 	dollyCam = new THREE.PerspectiveCamera();
 	dollyCam.add(camera);
 	scene.add(dollyCam);
 
-	dollyCam.position.set(0, -10, 20);
+	dollyCam.position.set(0, -400, 450);
 	//dollyCam.target.set(0, -10, 0);
 	//camera.target.set(0,-10,0);
 
@@ -89,17 +90,17 @@ function update(){
 	window.requestAnimationFrame(animate);
 }
 function animate(timestamp) {
-	let time = performance.now() * 0.009;
-	pointLight.position.x = Math.sin( time * 0.6 ) * 15;
-	pointLight.position.y = Math.sin( time * 0.7 ) * 15 + 5;
-	pointLight.position.z = Math.sin( time * 0.8 ) * 15;
+	let time = performance.now() * 0.001;
+	pointLight.position.x = Math.sin( time * 0.6 ) * 350;
+	pointLight.position.y = Math.sin( time * 0.7 ) * 350 + 5;
+	pointLight.position.z = Math.sin( time * 0.8 ) * 350;
 	pointLight.rotation.x = time;
 	pointLight.rotation.z = time;
 	time += 10000;
 
-	pointLight2.position.x = Math.sin( time * 0.6 ) * 9;
-	pointLight2.position.y = Math.sin( time * 0.7 ) * 9 + 5;
-	pointLight2.position.z = Math.sin( time * 0.8 ) * 9;
+	pointLight2.position.x = Math.sin( time * 0.6 ) * 350;
+	pointLight2.position.y = Math.sin( time * 0.7 ) * 350 + 5;
+	pointLight2.position.z = Math.sin( time * 0.8 ) * 350;
 	pointLight2.rotation.x = time;
 	pointLight2.rotation.z = time;
 
@@ -117,32 +118,8 @@ function animate(timestamp) {
 
 // ENVIRONMENT
 function createEnvironment(){
-	// SKYDOME
-	let sky_geo = new THREE.SphereGeometry(600, 24, 24);
-	let sky_mat = new THREE.MeshBasicMaterial({
-		color: 0xffffff,
-		side: THREE.DoubleSide,
-		wireframe: true,
-	});
-	var skydome = new THREE.Mesh(sky_geo, sky_mat);
-	scene.add(skydome)
-
-	// SPHERES
-	// let sp_geo  = new THREE.SphereGeometry(20, 12, 12);
-	// let sp_mat1 = new THREE.MeshBasicMaterial({
-	// 	color: 0x0000ff,
-	// 	side: THREE.DoubleSide,
-	// });
-	// let sp_mat2 = new THREE.MeshLambertMaterial({
-	// 	color: 0x00ff00,
-	// 	side: THREE.DoubleSide,
-	// })
-  //
-	// var sphere1 = new THREE.Mesh(sp_geo, sp_mat1);
-	// sphere1.position.set(-200, 0, 0);
-	//scene.add(sphere1);
-
-	let geometry = new THREE.BoxGeometry( 100, 100, 100 );
+	// Room
+	let geometry = new THREE.BoxGeometry( 1000, 1000, 1000 );
 	let boxMaterial = new THREE.MeshPhongMaterial( {
 					color: 0xa0adaf,
 					shininess: 10,
@@ -153,18 +130,37 @@ function createEnvironment(){
 	cube.receiveShadow = true;
 	scene.add( cube );
 
-	// var sphere2 = new THREE.Mesh(sp_geo, sp_mat2);
-	// sphere2.position.set(0, 0, -200);
-	// scene.add(sphere2);
+	// Objects in scene
+	let coneGeo = new THREE.ConeGeometry( 300, 1000, 300 );
+	let conMaterial = new THREE.MeshPhongMaterial( {color: 0xffffff} );
+	let cone = new THREE.Mesh( coneGeo, conMaterial );
+	cone.position.set(0,-490,-490);
+	scene.add( cone );
+
+	let circle = new THREE.SphereGeometry( 50, 50, 50 );
+	let circMaterial = new THREE.MeshPhongMaterial( {color: 0xffffff} );
+
+	for (let r=1;r<7;r++) {
+		let circleMesh = new THREE.Mesh( circle, circMaterial );
+		circles.push(circleMesh);
+		circleMesh.position.set(THREE.Math.randInt(-400,400), -450, THREE.Math.randInt(-400,0));
+		circleMesh.castShadow = true;
+		circleMesh.receiveShadow = false;
+		scene.add( circleMesh );
+	}
+	//circleMesh.position.set(-400,-450,-300);
+
 
 
 	// LIGHTS!
-	// scene.add( new THREE.AmbientLight( 0x3572B0) );
+	let ambient = new THREE.AmbientLight( 0x3BAB60,0.5);
+	ambient.castShadow = true;
+	scene.add( ambient );
 	// let d_light = new THREE.DirectionalLight(0xffffff, 1);
 	// d_light.position =
 	// scene.add(d_light);
 
-	pointLight = new THREE.PointLight(0xff0000, 1.5, 1000, 10);
+	pointLight = new THREE.PointLight(0xff0000, 2, 1000, 1);
 	pointLight.position.set(0, 0, 0);
 	let lightGeo1 = new THREE.SphereGeometry( 0.5, 50, 50 );
 	let lightMat1 = new THREE.MeshPhongMaterial( {
@@ -175,10 +171,11 @@ function createEnvironment(){
 	lightMesh1.castShadow = true;
 	lightMesh1.receiveShadow = true;
 	//pointLight.add( lightMesh1 );
+	pointLight.castShadow = true;
 
 	scene.add(pointLight);
 
-	pointLight2 = new THREE.PointLight(0x0000D0, 1.5, 1000, 10);
+	pointLight2 = new THREE.PointLight(0x0000D0, 2, 1000, 1);
 	pointLight2.position.set(0, 0, 0);
 	let lightGeo2 = new THREE.SphereGeometry( 0.5, 50, 50 );
 	let lightMat2 = new THREE.MeshPhongMaterial( {
@@ -189,6 +186,7 @@ function createEnvironment(){
 	lightMesh2.castShadow = true;
 	lightMesh2.receiveShadow = true;
 	//pointLight2.add( lightMesh2 );
+	pointLight2.castShadow = true;
 
 	scene.add(pointLight2);
 
